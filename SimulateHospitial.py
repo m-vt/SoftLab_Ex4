@@ -1,10 +1,20 @@
+
+import math
 import numpy
 import random
 import time
 from numpy import random as rn
+from numpy import random as rn
+import numpy
+import math
+import random
+import time
+import matplotlib.pyplot as plt
+
 
 
 class PERSON_ANOTHER_CONFLICT:
+
     def __init__(self, has_corona, bored_time, arrival_time, service_time):
         self.has_corona = has_corona
         self.bored_time = bored_time
@@ -17,7 +27,9 @@ class PERSON_ANOTHER_CONFLICT:
         self.wait_in_reception_queue = None
         self.total_wait = None
 
+
 class DOCTOR_ANOTHER_CONFLICT:
+
     def __init__(self, mean_service_rate):
         self.check_up_mean_service_rate = mean_service_rate
         self.cur_pat_type_corona = None
@@ -193,7 +205,10 @@ class hospital:
         for i in range(M):
             self.Rooms.append(ROOM(i, self.number_of_doctors_per_room[i], self.mean_check_up_time[i]))
 
+
+
     def start_simulation_another_conflict(self):
+
         clock = 0
         dict_people_in_system = {}
         dict_people_in_system_corona = {}
@@ -396,5 +411,104 @@ for number_of_doctors in number_of_doctors_per_room:
 
 start_time2 = time.time()
 Hospital = hospital(M, number_of_doctors_per_room, mean_check_up_time, perosons_corona, perosons_normal, corona_totals)
+
 info = Hospital.start_simulation_another_conflict()
+
 print("\nMy program took", time.time() - start_time2, "to run\n")
+
+print("mean_time_in_system_for_all: ", info["mean_time_in_system_for_all"])
+print("mean_time_in_system_for_corona_pat", info["mean_time_in_system_for_corona_pat"])
+print("mean_time_in_system_for_normal_pat", info["mean_time_in_system_for_normal_pat"])
+print("\n#######################################\n")
+print("mean time wait in queue: ", info["mean_time_wait_in_queue"])
+print("mean time in queue corona pats: ", info["mean_time_wait_in_queue_corona"])
+print("mean time in queue normal pats: ", info["mean_time_wait_in_queue_normal"])
+print("\n#######################################\n")
+print("left system: ", info["mean_left_pat"], " percent")
+print("mean len of reception queue : ", info["mean_len_reception_queue"])
+for i in range(M):
+    print("mean_len_room_queue_" + str(i), info["mean_len_room_queue_" + str(i)])
+
+
+
+sigma = 0
+normal_response_times = []
+normal_waits = []
+for pat in Hospital.persons_normal:
+    if pat.respons_time != None:
+        normal_response_times.append(pat.respons_time)
+    if pat.total_wait != None:
+        normal_waits.append(pat.total_wait)
+        sigma += (pat.total_wait * pat.total_wait)
+
+corona_rexpons_times = []
+corona_waits = []
+
+for pat in Hospital.persons_corona:
+    if pat.respons_time != None:
+        corona_rexpons_times.append(pat.respons_time)
+    if pat.total_wait != None:
+        corona_waits.append(pat.total_wait)
+        sigma += (pat.total_wait * pat.total_wait)
+
+sigma = sigma / (sum([Hospital.Rooms[i].total_finished for i in range(M)]))
+sigma -= (info["mean_time_wait_in_queue"]) ** 2
+sigma = math.sqrt(sigma)
+num_customer = ((1.96 *sigma) / (0.01 *info["mean_time_wait_in_queue"])) ** 2
+print("################################################################\n")
+print("number of patient to reach  0.95 accurany is: ", num_customer)
+
+
+
+plt.hist(normal_response_times, 30, alpha=0.5, label='normal pats', color='g')
+plt.hist(corona_rexpons_times, 30, alpha=0.5, label='corona pats', color='r')
+
+plt.legend(loc='upper right')
+plt.title("Response Time Frequency")
+plt.xlabel("Response time")
+plt.ylabel("Frequency")
+plt.show()
+
+################################################################################2
+plt.hist(normal_waits, 30, alpha=0.5, label='normal pats', color='g')
+plt.hist(corona_waits, 30, alpha=0.5, label='corona pats', color='r')
+
+plt.legend(loc='upper right')
+plt.title("Waiting Time Frequency")
+plt.xlabel("WAinting time")
+plt.ylabel("Frequency")
+plt.show()
+################################################################################3
+plt.title("people in sys frequency")
+plt.xlabel("clock*100")
+plt.ylabel("number of pats in system")
+plt.plot([i // 100 for i in info["normal_people_in_system_in_each_clk"].keys()],
+         info["normal_people_in_system_in_each_clk"].values(), color='green', label='corona pats')
+plt.plot([i // 100 for i in info["corona_people_in_system_in_each_clk"].keys()],
+         info["corona_people_in_system_in_each_clk"].values(), color='red', label="normal pats")
+# plt.legend()
+plt.show()
+###############################################################################4
+plt.title("people_in_sys_in_each_clk")
+plt.xlabel("clock")
+plt.ylabel("number of pats in system")
+plt.plot(info["people_in_system_in_each_clk"].keys(), info["people_in_system_in_each_clk"].values(), color='blue',
+         label='all')
+plt.plot(info["normal_people_in_system_in_each_clk"].keys(), info["normal_people_in_system_in_each_clk"].values(),
+         color='green', label='corona pats')
+plt.plot(info["corona_people_in_system_in_each_clk"].keys(), info["corona_people_in_system_in_each_clk"].values(),
+         color='red', label="normal pats")
+# plt.legend()
+plt.show()
+################################################################################5
+plt.title("people_in_queue_in_each_clk")
+plt.xlabel("clock")
+plt.ylabel("number of pats in q")
+plt.plot(info["people_in_queue_in_each_clk"].keys(), info["people_in_queue_in_each_clk"].values(), color='blue',
+         label='all')
+plt.plot(info["normal_people_in_queue_in_each_clk"].keys(), info["normal_people_in_queue_in_each_clk"].values(),
+         color='green', label='corona pats')
+plt.plot(info["corona_people_in_queue_in_each_clk"].keys(), info["corona_people_in_queue_in_each_clk"].values(),
+         color='red', label="normal pats")
+# plt.legend()
+plt.show()
