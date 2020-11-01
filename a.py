@@ -225,11 +225,14 @@ class hospital:
                     self.Rooms[index_min_qu].corona_patients_queue.append(self.reception.Queue_to_room.pop(0))
                 else:
                     self.Rooms[index_min_qu].normal_patients_queue.append(self.reception.Queue_to_room.pop(0))
+            len_queue_corona_rooms = 0
+            len_queue_normal_rooms = 0
 
             time3 = time.time()
             self.time_calculate_min_len += time3 - time2
 
             for i in range(M):
+                time3 = time.time()
                 # check bored time in rooms queue
                 for patient in self.Rooms[i].corona_patients_queue:
                     if clock - patient.arrival_time - patient.service_time > patient.bored_time:
@@ -241,6 +244,19 @@ class hospital:
                         left_rooms_normal_pats += 1
                         self.Rooms[i].normal_patients_queue.remove(patient)
                         self.number_of_patients -= 1
+
+                time4 = time.time()
+                self.time_tired_room_took += time4 - time3
+
+                # check up each room :
+                temp_number_of_pat_finished_check_up = self.Rooms[i].check_up(clock)
+                time5 = time.time()
+                self.time_room_took += time5 - time4
+                self.number_of_patients -= temp_number_of_pat_finished_check_up
+                len_queue_corona_rooms += len(self.Rooms[i].corona_patients_queue)
+                len_queue_normal_rooms += len(self.Rooms[i].normal_patients_queue)
+                len_rooms_queue[i] += len_queue_normal_rooms + len_queue_corona_rooms
+                self.time_calculation_in1 += time.time() - time5
 
 
 n = 10_000_000  # number of patinets
