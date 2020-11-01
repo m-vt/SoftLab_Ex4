@@ -2,6 +2,7 @@
 import numpy
 import random
 import time
+from numpy import random as rn
 
 
 class PERSON:
@@ -16,6 +17,83 @@ class PERSON:
         self.end_time = None
         self.wait_in_reception_queue = None
         self.total_wait = None
+
+class DOCTOR:
+    def __init__(self, mean_service_rate):
+        self.check_up_mean_service_rate = mean_service_rate
+        self.cur_pat_type_corona = None
+        self.finish_check_up_clock = -1
+
+class ROOM:
+    def __init__(self, number_of_doctors, mean_service_rates):
+        self.Doctors = []
+        for i in range(number_of_doctors):
+            self.Doctors.append(DOCTOR(mean_service_rates[i]))
+        self.corona_patients_queue = []
+        self.normal_patients_queue = []
+        self.number_of_corona_pat_in_room = 0
+        self.number_of_normal_pat_in_room = 0
+        self.room_is_full = False
+        self.total_finished = 0
+        self.total_time_in_sys_corona_pats = 0
+        self.total_time_in_sys_normal_pats = 0
+        self.total_time_wait_in_room_q_corona = 0
+        self.total_time_wait_in_room_q_normal = 0
+
+    def check_up(self, clock):
+
+        number_of_busy_doctors = 0
+        number_of_pat_finished_check_up = 0
+
+        for doctor in self.Doctors:
+
+            if doctor.finish_check_up_clock > clock:
+                number_of_busy_doctors += 1
+                continue
+
+            if doctor.finish_check_up_clock <= clock:
+                if doctor.finish_check_up_clock == clock:
+                    if doctor.cur_pat_type_corona:
+                        self.number_of_corona_pat_in_room -= 1
+                    else:
+                        self.number_of_normal_pat_in_room -= 1
+                    self.total_finished += 1
+                    number_of_pat_finished_check_up += 1
+                    number_of_busy_doctors -= 1
+
+                if (len(self.corona_patients_queue) or len(self.normal_patients_queue)):
+
+                    number_of_busy_doctors += 1
+                    service_rate = int(rn.exponential(doctor.check_up_mean_service_rate)) + 1
+
+                    doctor.finish_check_up_clock = clock + service_rate
+
+                    if len(self.corona_patients_queue):
+                        doctor.cur_pat_type_corona = True
+                        patient = self.corona_patients_queue.pop(0)
+                        self.number_of_corona_pat_in_room += 1
+                        wait = clock - (
+                                patient.arrival_time + patient.service_time + patient.wait_in_reception_queue)
+                        self.total_time_wait_in_room_q_corona += wait
+                        patient.total_wait = patient.wait_in_reception_queue + wait
+                        self.total_time_in_sys_corona_pats += (clock + service_rate - patient.arrival_time)
+
+                    else:
+                        doctor.cur_pat_type_corona = False
+                        patient = self.normal_patients_queue.pop(0)
+                        self.number_of_normal_pat_in_room += 1
+                        wait = clock - (
+                                patient.arrival_time + patient.service_time + patient.wait_in_reception_queue)
+                        self.total_time_wait_in_room_q_normal += wait
+                        patient.total_wait = patient.wait_in_reception_queue + wait
+                        self.total_time_in_sys_normal_pats += (clock + service_rate - patient.arrival_time)
+
+                    patient.respons_time += service_rate
+
+        self.room_is_full = number_of_busy_doctors == len(self.Doctors)
+
+        return number_of_pat_finished_check_up
+
 
 class Reception_class:
     def __init__(self, persons_corona, persons_normal):
