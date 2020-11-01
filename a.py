@@ -177,19 +177,26 @@ class Reception_class:
 
 class hospital:
     def __init__(self, M, number_of_doctors_per_room, mean_check_up_time, persons_corona, persons_normal, corona_totals):
-        self.number_of_patients = len(persons_corona) + len(persons_normal)
         self.reception = Reception_class(perosons_corona, perosons_normal)
         self.number_of_doctors_per_room = number_of_doctors_per_room
         self.mean_check_up_time = mean_check_up_time
         self.Rooms = []
+        self.time_reception_took = 0
+        self.time_tired_room_took = 0
+        self.time_room_took = 0
+        self.time_calculate_min_len = 0
+        self.time_calculation_in1 = 0
         self.time_reception_took = 0
         for i in range(M):
             self.Rooms.append(ROOM(i, self.number_of_doctors_per_room[i], self.mean_check_up_time[i]))
 
     def start_simulation(self):
         clock = 0
+        len_rooms_queue = [0 for i in range(len(self.Rooms))]
         left_reception_normal_pats = 0
         left_reception_corona_pats = 0
+        left_rooms_normal_pats = 0
+        left_rooms_corona_pats = 0
         while self.number_of_patients >= 0:
 
             left_reception_normal_pats_temp = 0
@@ -218,6 +225,23 @@ class hospital:
                     self.Rooms[index_min_qu].corona_patients_queue.append(self.reception.Queue_to_room.pop(0))
                 else:
                     self.Rooms[index_min_qu].normal_patients_queue.append(self.reception.Queue_to_room.pop(0))
+
+            time3 = time.time()
+            self.time_calculate_min_len += time3 - time2
+
+            for i in range(M):
+                # check bored time in rooms queue
+                for patient in self.Rooms[i].corona_patients_queue:
+                    if clock - patient.arrival_time - patient.service_time > patient.bored_time:
+                        left_rooms_corona_pats += 1
+                        self.Rooms[i].corona_patients_queue.remove(patient)
+                        self.number_of_patients -= 1
+                for patient in self.Rooms[i].normal_patients_queue:
+                    if clock - patient.arrival_time - patient.service_time > patient.bored_time:
+                        left_rooms_normal_pats += 1
+                        self.Rooms[i].normal_patients_queue.remove(patient)
+                        self.number_of_patients -= 1
+
 
 n = 10_000_000  # number of patinets
 M = int(input("number of rooms: "))
