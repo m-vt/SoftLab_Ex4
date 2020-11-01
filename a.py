@@ -181,17 +181,30 @@ class hospital:
         self.number_of_doctors_per_room = number_of_doctors_per_room
         self.mean_check_up_time = mean_check_up_time
         self.Rooms = []
+        self.corona_totals = corona_totals
+        self.persons_normal = persons_normal
+        self.persons_corona =persons_corona
         self.time_reception_took = 0
         self.time_tired_room_took = 0
         self.time_room_took = 0
         self.time_calculate_min_len = 0
         self.time_calculation_in1 = 0
+        self.time_calculation_in2 = 0
         self.time_reception_took = 0
         for i in range(M):
             self.Rooms.append(ROOM(i, self.number_of_doctors_per_room[i], self.mean_check_up_time[i]))
 
     def start_simulation(self):
         clock = 0
+        dict_people_in_system = {}
+        dict_people_in_system_corona = {}
+        dict_people_in_system_normal = {}
+        dict_people_in_queue = {}
+        dict_people_in_queue_corona = {}
+        dict_people_in_queue_normal = {}
+        temp_counter = 0
+        len_reception_queue_corona = 0
+        len_reception_queue_normal = 0
         len_rooms_queue = [0 for i in range(len(self.Rooms))]
         left_reception_normal_pats = 0
         left_reception_corona_pats = 0
@@ -227,6 +240,8 @@ class hospital:
                     self.Rooms[index_min_qu].normal_patients_queue.append(self.reception.Queue_to_room.pop(0))
             len_queue_corona_rooms = 0
             len_queue_normal_rooms = 0
+            number_of_normal_pat_in_rooms = 0
+            number_of_corona_pat_in_rooms = 0
 
             time3 = time.time()
             self.time_calculate_min_len += time3 - time2
@@ -257,6 +272,71 @@ class hospital:
                 len_queue_normal_rooms += len(self.Rooms[i].normal_patients_queue)
                 len_rooms_queue[i] += len_queue_normal_rooms + len_queue_corona_rooms
                 self.time_calculation_in1 += time.time() - time5
+            time5 = time.time()
+
+            dict_people_in_queue_corona[clock] = len_queue_corona_rooms + len_reception_queue_corona
+            dict_people_in_queue_normal[clock] = len_queue_normal_rooms + len_reception_queue_normal
+            dict_people_in_queue[clock] = dict_people_in_queue_normal[clock] + dict_people_in_queue_corona[clock]
+
+            dict_people_in_system_corona[clock] = dict_people_in_queue_corona[clock] + number_of_corona_pat_in_rooms + (
+                    self.reception.reception_busy and self.reception.patient_in_reception.has_corona)
+            dict_people_in_system_normal[clock] = dict_people_in_queue_normal[clock] + number_of_normal_pat_in_rooms + (
+                    self.reception.reception_busy and not self.reception.patient_in_reception.has_corona)
+
+            dict_people_in_system[clock] = dict_people_in_system_corona[clock] + dict_people_in_system_normal[clock]
+
+            self.time_calculation_in2 += time.time() - time5
+
+            if self.number_of_patients == 0:
+                temp_counter += 1
+            if temp_counter == 2:
+                break
+            clock += 1
+        ###################################### Outputs:
+
+        info = {}
+        normal_totals = n - self.corona_totals
+        left_pats = left_reception_normal_pats + left_reception_corona_pats + left_rooms_corona_pats + left_rooms_normal_pats
+
+        total_wait_in_queue_corona = self.reception.total_time_wait_in_q_corona_pats + sum(
+            [self.Rooms[i].total_time_wait_in_room_q_corona for i in range(M)])
+        total_wait_in_queue_normal = self.reception.total_time_wait_in_q_normal_pats + sum(
+            [self.Rooms[i].total_time_wait_in_room_q_normal for i in range(M)])
+
+        info["mean_time_wait_in_queue"] = (total_wait_in_queue_normal + total_wait_in_queue_corona) / (
+                len(self.persons_normal) + len(perosons_corona) - left_pats)
+        info["mean_time_wait_in_queue_corona"] = (total_wait_in_queue_corona) / (
+                self.corona_totals - (left_rooms_corona_pats + left_reception_corona_pats))
+        info["mean_time_wait_in_queue_normal"] = (total_wait_in_queue_normal) / (
+                normal_totals - (left_rooms_normal_pats + left_reception_normal_pats))
+        total_time_in_system_corona_pats = sum([self.Rooms[i].total_time_in_sys_corona_pats for i in range(M)])
+        total_time_in_system_normal_pats = sum([self.Rooms[i].total_time_in_sys_normal_pats for i in range(M)])
+
+        info["mean_time_in_system_for_all"] = (total_time_in_system_corona_pats + total_time_in_system_normal_pats) / (
+                len(self.persons_normal) + len(perosons_corona) - left_pats)
+        info["mean_time_in_system_for_corona_pat"] = total_time_in_system_corona_pats / (
+                self.corona_totals - (left_rooms_corona_pats + left_reception_corona_pats))
+        info["mean_time_in_system_for_normal_pat"] = total_time_in_system_normal_pats / (
+                normal_totals - (left_rooms_normal_pats + left_reception_normal_pats))
+
+        ##### mean left pats :
+        info["mean_left_pat"] = left_pats / (len(self.persons_normal) + len(perosons_corona)) * 100
+
+        ##### mean reception queue and each room :
+        info["mean_len_reception_queue"] = (self.reception.total_time_wait_in_q_corona_pats + self.reception.total_time_wait_in_q_normal_pats) / (1.8 * (len(self.persons_normal) + len(perosons_corona) - left_reception_normal_pats - left_reception_corona_pats))
+
+        for i in range(M):
+            info["mean_len_room_queue_" + str(i)] = len_rooms_queue[i] / clock
+
+        info["people_in_queue_in_each_clk"] = dict_people_in_queue
+        info["corona_people_in_queue_in_each_clk"] = dict_people_in_queue_corona
+        info["normal_people_in_queue_in_each_clk"] = dict_people_in_queue_normal
+
+        info["people_in_system_in_each_clk"] = dict_people_in_system
+        info["corona_people_in_system_in_each_clk"] = dict_people_in_system_corona
+        info["normal_people_in_system_in_each_clk"] = dict_people_in_system_normal
+
+        return info
 
 
 n = 10_000_000  # number of patinets
@@ -301,3 +381,21 @@ for i in range(n):
             corona_temp_index += 1
     else:
         perosons_normal.append(PERSON(False, alpha, arrival_time[i], service_time_for_paziresh[i]))
+
+mean_check_up_time = []
+
+print("enter", M, "number of doctors for rooms :")
+temp = input()
+temp = temp.split(" ")
+number_of_doctors_per_room = [int(i) for i in temp]
+
+for number_of_doctors in number_of_doctors_per_room:
+    print("enter ", number_of_doctors, " mean check up time:")
+    temp = input()
+    temp = temp.split(" ")
+    mean_check_up_time.append([float(i) for i in temp])
+
+start_time2 = time.time()
+Hospital = hospital(M, number_of_doctors_per_room, mean_check_up_time, perosons_corona, perosons_normal, corona_totals)
+info = Hospital.start_simulation()
+print("\nMy program took", time.time() - start_time2, "to run\n")
