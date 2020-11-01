@@ -1,8 +1,15 @@
+import math
 
 import numpy
 import random
 import time
 from numpy import random as rn
+from numpy import random as rn
+import numpy
+import math
+import random
+import time
+import matplotlib.pyplot as plt
 
 
 class PERSON:
@@ -412,3 +419,32 @@ print("left system: ", info["mean_left_pat"], " percent")
 print("mean len of reception queue : ", info["mean_len_reception_queue"])
 for i in range(M):
     print("mean_len_room_queue_" + str(i), info["mean_len_room_queue_" + str(i)])
+
+
+
+sigma = 0
+normal_response_times = []
+normal_waits = []
+for pat in Hospital.persons_normal:
+    if pat.respons_time != None:
+        normal_response_times.append(pat.respons_time)
+    if pat.total_wait != None:
+        normal_waits.append(pat.total_wait)
+        sigma += (pat.total_wait * pat.total_wait)
+
+corona_rexpons_times = []
+corona_waits = []
+
+for pat in Hospital.persons_corona:
+    if pat.respons_time != None:
+        corona_rexpons_times.append(pat.respons_time)
+    if pat.total_wait != None:
+        corona_waits.append(pat.total_wait)
+        sigma += (pat.total_wait * pat.total_wait)
+
+sigma = sigma / (sum([Hospital.Rooms[i].total_finished for i in range(M)]))
+sigma -= (info["mean_time_wait_in_queue"]) ** 2
+sigma = math.sqrt(sigma)
+num_customer = ((1.96 *sigma) / (0.01 *info["mean_time_wait_in_queue"])) ** 2
+print("################################################################\n")
+print("number of patient to reach  0.95 accurany is: ", num_customer)
