@@ -18,6 +18,62 @@ class PERSON:
         self.total_wait = None
 
 
+class Reception_class:
+    def __init__(self, persons_corona, persons_normal):
+        self.Queue_to_room = []
+        self.corona_patient_queue = persons_corona.copy()
+        self.corona_pat_q_index = 0
+        self.normal_patient_queue = persons_normal.copy()
+        self.normal_pat_q_index = 0
+        self.reception_clock_finish_service = -1
+        self.reception_busy = False
+        self.patient_in_reception = None
+
+        self.total_time_wait_in_q_corona_pats = 0
+        self.total_time_wait_in_q_normal_pats = 0
+
+        self.time_tired = 0
+        self.time_while = 0
+        self.time_add = 0
+        self.counter = 0
+
+    def Reception(self, clock, number_of_patients):
+        left_reception_corona_pats = 0
+        left_reception_normal_pats = 0
+        # time2 = time.time()
+        if clock >= self.reception_clock_finish_service:
+
+            if clock == self.reception_clock_finish_service:
+                self.reception_busy = False
+                self.Queue_to_room.append(self.patient_in_reception)
+
+
+            if len(self.corona_patient_queue) - self.corona_pat_q_index and self.corona_patient_queue[
+                self.corona_pat_q_index].arrival_time <= clock:
+                self.patient_in_reception = self.corona_patient_queue[self.corona_pat_q_index]
+                self.corona_pat_q_index += 1
+                self.reception_busy = True
+                self.reception_clock_finish_service = clock + self.patient_in_reception.service_time
+                # wait_in_reception_queue = \
+                self.patient_in_reception.wait_in_reception_queue = clock - self.patient_in_reception.arrival_time
+                self.total_time_wait_in_q_corona_pats += self.patient_in_reception.wait_in_reception_queue
+
+            elif len(self.normal_patient_queue) - self.normal_pat_q_index and self.normal_patient_queue[
+                self.normal_pat_q_index].arrival_time <= clock:
+
+                self.patient_in_reception = self.normal_patient_queue[self.normal_pat_q_index]
+                self.normal_pat_q_index += 1
+                self.reception_clock_finish_service = clock + self.patient_in_reception.service_time
+                self.reception_busy = True
+                self.patient_in_reception.wait_in_reception_queue = clock - self.patient_in_reception.arrival_time
+                self.total_time_wait_in_q_normal_pats += self.patient_in_reception.wait_in_reception_queue
+
+            # time4 = time.time()
+            # self.time_add += time4 - time3
+
+        return number_of_patients, left_reception_corona_pats, left_reception_normal_pats
+
+
 n = 10_000_000  # number of patinets
 # M = int(input("number of rooms: "))
 alpha = int(input("mean time to bored: "))
