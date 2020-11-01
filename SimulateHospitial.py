@@ -448,3 +448,58 @@ sigma = math.sqrt(sigma)
 num_customer = ((1.96 *sigma) / (0.01 *info["mean_time_wait_in_queue"])) ** 2
 print("################################################################\n")
 print("number of patient to reach  0.95 accurany is: ", num_customer)
+
+
+
+plt.hist(normal_response_times, 30, alpha=0.5, label='normal pats', color='g')
+plt.hist(corona_rexpons_times, 30, alpha=0.5, label='corona pats', color='r')
+
+plt.legend(loc='upper right')
+plt.title("Response Time Frequency")
+plt.xlabel("Response time")
+plt.ylabel("Frequency")
+plt.show()
+
+################################################################################2 
+plt.hist(normal_waits, 30, alpha=0.5, label='normal pats', color='g')
+plt.hist(corona_waits, 30, alpha=0.5, label='corona pats', color='r')
+
+plt.legend(loc='upper right')
+plt.title("Waiting Time Frequency")
+plt.xlabel("WAinting time")
+plt.ylabel("Frequency")
+plt.show()
+################################################################################3
+plt.title("people in sys frequency")
+plt.xlabel("clock*100")
+plt.ylabel("number of pats in system")
+plt.plot([i // 100 for i in info["normal_people_in_system_in_each_clk"].keys()],
+         info["normal_people_in_system_in_each_clk"].values(), color='green', label='corona pats')
+plt.plot([i // 100 for i in info["corona_people_in_system_in_each_clk"].keys()],
+         info["corona_people_in_system_in_each_clk"].values(), color='red', label="normal pats")
+# plt.legend()
+plt.show()
+###############################################################################4
+plt.title("people_in_sys_in_each_clk")
+plt.xlabel("clock")
+plt.ylabel("number of pats in system")
+plt.plot(info["people_in_system_in_each_clk"].keys(), info["people_in_system_in_each_clk"].values(), color='blue',
+         label='all')
+plt.plot(info["normal_people_in_system_in_each_clk"].keys(), info["normal_people_in_system_in_each_clk"].values(),
+         color='green', label='corona pats')
+plt.plot(info["corona_people_in_system_in_each_clk"].keys(), info["corona_people_in_system_in_each_clk"].values(),
+         color='red', label="normal pats")
+# plt.legend()
+plt.show()
+################################################################################5
+plt.title("people_in_queue_in_each_clk")
+plt.xlabel("clock")
+plt.ylabel("number of pats in q")
+plt.plot(info["people_in_queue_in_each_clk"].keys(), info["people_in_queue_in_each_clk"].values(), color='blue',
+         label='all')
+plt.plot(info["normal_people_in_queue_in_each_clk"].keys(), info["normal_people_in_queue_in_each_clk"].values(),
+         color='green', label='corona pats')
+plt.plot(info["corona_people_in_queue_in_each_clk"].keys(), info["corona_people_in_queue_in_each_clk"].values(),
+         color='red', label="normal pats")
+# plt.legend()
+plt.show()
