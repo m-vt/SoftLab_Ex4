@@ -12,7 +12,7 @@ import time
 import matplotlib.pyplot as plt
 
 
-class PERSON:
+class PERSON_CONFLICT:
     def __init__(self, has_corona, bored_time, arrival_time, service_time):
         self.has_corona = has_corona
         self.bored_time = bored_time
@@ -25,7 +25,7 @@ class PERSON:
         self.wait_in_reception_queue = None
         self.total_wait = None
 
-class DOCTOR:
+class DOCTOR_CONFLICT:
     def __init__(self, mean_service_rate):
         self.check_up_mean_service_rate = mean_service_rate
         self.cur_pat_type_corona = None
@@ -201,7 +201,7 @@ class hospital:
         for i in range(M):
             self.Rooms.append(ROOM(i, self.number_of_doctors_per_room[i], self.mean_check_up_time[i]))
 
-    def start_simulation(self):
+    def start_simulation_conflict(self):
         clock = 0
         dict_people_in_system = {}
         dict_people_in_system_corona = {}
@@ -404,7 +404,7 @@ for number_of_doctors in number_of_doctors_per_room:
 
 start_time2 = time.time()
 Hospital = hospital(M, number_of_doctors_per_room, mean_check_up_time, perosons_corona, perosons_normal, corona_totals)
-info = Hospital.start_simulation()
+info = Hospital.start_simulation_conflict()
 print("\nMy program took", time.time() - start_time2, "to run\n")
 
 print("mean_time_in_system_for_all: ", info["mean_time_in_system_for_all"])
@@ -460,7 +460,7 @@ plt.xlabel("Response time")
 plt.ylabel("Frequency")
 plt.show()
 
-################################################################################2 
+################################################################################2
 plt.hist(normal_waits, 30, alpha=0.5, label='normal pats', color='g')
 plt.hist(corona_waits, 30, alpha=0.5, label='corona pats', color='r')
 
