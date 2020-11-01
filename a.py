@@ -25,7 +25,7 @@ class DOCTOR:
         self.finish_check_up_clock = -1
 
 class ROOM:
-    def __init__(self, number_of_doctors, mean_service_rates):
+    def __init__(self, room_num, number_of_doctors, mean_service_rates):
         self.Doctors = []
         for i in range(number_of_doctors):
             self.Doctors.append(DOCTOR(mean_service_rates[i]))
@@ -175,9 +175,52 @@ class Reception_class:
 
         return number_of_patients, left_reception_corona_pats, left_reception_normal_pats
 
+class hospital:
+    def __init__(self, M, number_of_doctors_per_room, mean_check_up_time, persons_corona, persons_normal, corona_totals):
+        self.number_of_patients = len(persons_corona) + len(persons_normal)
+        self.reception = Reception_class(perosons_corona, perosons_normal)
+        self.number_of_doctors_per_room = number_of_doctors_per_room
+        self.mean_check_up_time = mean_check_up_time
+        self.Rooms = []
+        self.time_reception_took = 0
+        for i in range(M):
+            self.Rooms.append(ROOM(i, self.number_of_doctors_per_room[i], self.mean_check_up_time[i]))
+
+    def start_simulation(self):
+        clock = 0
+        left_reception_normal_pats = 0
+        left_reception_corona_pats = 0
+        while self.number_of_patients >= 0:
+
+            left_reception_normal_pats_temp = 0
+            left_reception_corona_pats_temp = 0
+
+            time1 = time.time()
+            if len(self.reception.corona_patient_queue) or len(
+                    self.reception.normal_patient_queue) or self.reception.patient_in_reception:
+                self.number_of_patients, left_reception_corona_pats_temp, left_reception_normal_pats_temp = self.reception.Reception(
+                    clock, self.number_of_patients)
+
+            # add number of pat left system in reception q
+            left_reception_normal_pats += left_reception_normal_pats_temp
+            left_reception_corona_pats += left_reception_corona_pats_temp
+
+            time2 = time.time()
+            self.time_reception_took += time2 - time1
+
+            # send pat to shortest q
+            while len(self.reception.Queue_to_room):
+                qu_len = [
+                    len(self.Rooms[i].corona_patients_queue) + len(self.Rooms[i].normal_patients_queue) + self.Rooms[
+                        i].room_is_full for i in range(M)]
+                index_min_qu = qu_len.index(min(qu_len))
+                if self.reception.Queue_to_room[0].has_corona:
+                    self.Rooms[index_min_qu].corona_patients_queue.append(self.reception.Queue_to_room.pop(0))
+                else:
+                    self.Rooms[index_min_qu].normal_patients_queue.append(self.reception.Queue_to_room.pop(0))
 
 n = 10_000_000  # number of patinets
-# M = int(input("number of rooms: "))
+M = int(input("number of rooms: "))
 alpha = int(input("mean time to bored: "))
 u = float(input("mean reception service rate: "))
 landa = float(input("mean arrival rate: "))
