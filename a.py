@@ -17,7 +17,6 @@ class PERSON:
         self.wait_in_reception_queue = None
         self.total_wait = None
 
-
 class Reception_class:
     def __init__(self, persons_corona, persons_normal):
         self.Queue_to_room = []
@@ -40,13 +39,38 @@ class Reception_class:
     def Reception(self, clock, number_of_patients):
         left_reception_corona_pats = 0
         left_reception_normal_pats = 0
-        # time2 = time.time()
+        time2 = time.time()
         if clock >= self.reception_clock_finish_service:
 
             if clock == self.reception_clock_finish_service:
                 self.reception_busy = False
                 self.Queue_to_room.append(self.patient_in_reception)
 
+            # if  pat is tired -- > left qu
+            time2 = time.time()
+
+            while True:
+                if (len(self.corona_patient_queue) - self.corona_pat_q_index) and self.corona_patient_queue[
+                    self.corona_pat_q_index].bored_reception_clock <= clock:
+                    self.corona_pat_q_index += 1
+                    number_of_patients -= 1
+                    left_reception_corona_pats += 1
+                else:
+                    break
+
+            while True:
+                if (len(self.normal_patient_queue) - self.normal_pat_q_index) and self.normal_patient_queue[
+                    self.normal_pat_q_index].bored_reception_clock <= clock:
+                    self.normal_pat_q_index += 1
+                    number_of_patients -= 1
+                    left_reception_normal_pats += 1
+                else:
+                    break
+
+            time3 = time.time()
+            self.time_tired += (time3 - time2)
+
+            # next pat come to reception
 
             if len(self.corona_patient_queue) - self.corona_pat_q_index and self.corona_patient_queue[
                 self.corona_pat_q_index].arrival_time <= clock:
@@ -68,8 +92,8 @@ class Reception_class:
                 self.patient_in_reception.wait_in_reception_queue = clock - self.patient_in_reception.arrival_time
                 self.total_time_wait_in_q_normal_pats += self.patient_in_reception.wait_in_reception_queue
 
-            # time4 = time.time()
-            # self.time_add += time4 - time3
+            time4 = time.time()
+            self.time_add += time4 - time3
 
         return number_of_patients, left_reception_corona_pats, left_reception_normal_pats
 
