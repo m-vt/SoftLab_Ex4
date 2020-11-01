@@ -17,6 +17,12 @@ class PERSON:
         self.wait_in_reception_queue = None
         self.total_wait = None
 
+class DOCTOR:
+    def __init__(self, mean_service_rate):
+        self.check_up_mean_service_rate = mean_service_rate
+        self.cur_pat_type_corona = None
+        self.finish_check_up_clock = -1
+
 class Reception_class:
     def __init__(self, persons_corona, persons_normal):
         self.Queue_to_room = []
